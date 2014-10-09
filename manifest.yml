@@ -4,8 +4,8 @@ applications:
   memory: 512M
   instances: 1
   host: helloworldclub
-  domain: mybluemix.net
+  domain: cfapps.io
   path: .
   command: node app.js
 env:
-  NODE_ENV : production  
+  NODE_ENV : production
