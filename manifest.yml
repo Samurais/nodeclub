@@ -1,0 +1,11 @@
+---
+applications:
+- name: HelloWorldClub
+  memory: 512M
+  instances: 1
+  host: helloworldclub
+  domain: mybluemix.net
+  path: .
+  command: node app.js
+env:
+  NODE_ENV : production  

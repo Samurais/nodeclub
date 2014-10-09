@@ -1,0 +1,13 @@
+.settings/
+build/
+node-lib/
+.*
+build.xml
+*.launch
+*.zip
+*.out
+*.loadrule
+unittest/
+logs/*.log
+node_modules
+.git
