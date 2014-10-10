@@ -22,7 +22,6 @@ var GitHubStrategy = require('passport-github').Strategy;
 var githubStrategyMiddleware = require('./middlewares/github_strategy');
 var routes = require('./routes');
 var auth = require('./middlewares/auth');
-var MongoStore = require('connect-mongo')(session);
 var _ = require('lodash');
 var csurf = require('csurf');
 var compress = require('compression');
@@ -65,9 +64,6 @@ app.use(require('cookie-parser')(config.session_secret));
 app.use(compress());
 app.use(session({
   secret: config.session_secret,
-  store: new MongoStore({
-    url: config.db
-  }),
   resave: true,
   saveUninitialized: true,
 }));
