@@ -3,6 +3,30 @@
  */
 
 var path = require('path');
+var fs = require('fs');
+var jf = require('jsonfile')
+
+// add a config in home as higher priority
+function getUserHome() {
+  return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+}
+
+function isHomeConfigExist(){
+  try{
+    if(getUserHome()){
+      var cfgPath = path.join(getUserHome(),'nodeclub-config.json');
+      var _config = jf.readFileSync(cfgPath);
+      // TODO check it _config
+      config = _config;
+    }
+  }catch(e){
+    console.log('WARN cannot find config in home path. Just use the origin one.');
+  }
+}
+
+function figureHomeCfg(){
+  isHomeConfigExist();
+}
 
 var debug = false;
 
@@ -29,14 +53,53 @@ var config = {
   // cdn host，如 http://cnodejs.qiniudn.com
   site_static_host: '', // 静态文件存储域名
   // 社区的域名
-  host: 'helloworldclub.cfapps.io',
+  host: 'localhost',
   // 默认的Google tracker ID，自有站点请修改，申请地址：http://www.google.com/analytics/
   google_tracker_id: 'UA-4175xxxx-x',
 
   // mongodb 配置
   db: 'mongodb://master:UmHosooj1@ds039530-a0.mongolab.com:39530,ds039530-a1.mongolab.com:39530/helloworldclub',
   db_name: 'helloworldclub',
+  db_mongostore:{
+    db: {
+        "name" : "helloworldclub",
+        "servers" : [
+          {
+            "host" : "ds039530-a0.mongolab.com",
+            "port" : 39530,
+            "username":"master",
+            "password":"UmHosooj1",
+            "options" : {
+              "autoReconnect" : false,
+              "poolSize" : 200,
+              "socketOptions" : {
+                "timeout" : 0,
+                "noDelay" : true,
+                "keepAlive" : 1,
+                "encoding" : "utf8"
+              }
+            }
+          },
+          {
+            "host" : "ds039530-a1.mongolab.com",
+            "port" : 39530,
 
+            "options" : {
+              "autoReconnect" : false,
+              "poolSize" : 200,
+              "socketOptions" : {
+                "timeout" : 0,
+                "noDelay" : true,
+                "keepAlive" : 1,
+                "encoding" : "utf8"
+              }
+            }
+          }
+      ]
+    },
+    username: "master",
+    password: "UmHosooj1"
+  },
 
   session_secret: 'helloworldclub_voocKonck', // 务必修改
   auth_cookie_name: 'hello-world-club',
@@ -53,7 +116,7 @@ var config = {
   // RSS配置
   rss: {
     title: 'Hello World Club',
-    link: 'http://helloworldclub.cfapps.io',
+    link: 'http://club.helloworld-cafe.com',
     language: 'zh-cn',
     description: 'IT社区:创新、创投圈子',
     //最多获取的RSS Item数量
@@ -92,13 +155,13 @@ var config = {
 
   // admin 可删除话题，编辑标签，设某人为达人
   admins: { user_login_name: true,
-            hain: true },
+            hain_wang: true },
 
   // github 登陆的配置
   GITHUB_OAUTH: {
-    clientID: 'your GITHUB_CLIENT_ID',
-    clientSecret: 'your GITHUB_CLIENT_SECRET',
-    callbackURL: 'http://helloworldclub.mybluemix.net/auth/github/callback'
+    clientID: 'f8dbb76a15529ffa80e1',
+    clientSecret: '08dc91cd8cca571b310684eead7de53d7844ec7b',
+    callbackURL: 'http://club.helloworld-cafe.com/auth/github/callback'
   },
   // 是否允许直接注册（否则只能走 github 的方式）
   allow_sign_up: true,
@@ -108,10 +171,10 @@ var config = {
 
   //7牛的access信息，用于文件上传
   qn_access: {
-    accessKey: 'your access key',
-    secretKey: 'your secret key',
-    bucket: 'your bucket name',
-    domain: 'http://{bucket}.qiniudn.com'
+    accessKey: 'AJESJBpE_S8ItnIkMlQzzEpLJEI3PeozNJN0aGeV',
+    secretKey: 'RtzTNwNku6lPb8vYktvwgpeK2zM-9pUM5dItwcDw',
+    bucket: 'arrking',
+    domain: 'arrking.qiniudn.com'
   },
 
   //文件上传配置
@@ -128,5 +191,7 @@ var config = {
     ['job', '招聘']
   ]
 };
+
+figureHomeCfg();
 
 module.exports = config;
