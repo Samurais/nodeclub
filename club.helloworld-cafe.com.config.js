@@ -51,7 +51,7 @@ var config = {
     [ '/about', '关于' ]
   ],
   // cdn host，如 http://cnodejs.qiniudn.com
-  site_static_host: '', // 静态文件存储域名
+  site_static_host: 'http://arrking.qiniudn.com', // 静态文件存储域名
   // 社区的域名
   host: 'localhost',
   // 默认的Google tracker ID，自有站点请修改，申请地址：http://www.google.com/analytics/
@@ -174,7 +174,7 @@ var config = {
     accessKey: 'AJESJBpE_S8ItnIkMlQzzEpLJEI3PeozNJN0aGeV',
     secretKey: 'RtzTNwNku6lPb8vYktvwgpeK2zM-9pUM5dItwcDw',
     bucket: 'arrking',
-    domain: 'arrking.qiniudn.com'
+    domain: 'http://arrking.qiniudn.com'
   },
 
   //文件上传配置
