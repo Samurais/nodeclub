@@ -13,7 +13,7 @@ var config = {
   mini_assets: !debug, // 是否启用静态文件的合并压缩，详见视图中的Loader
 
   name: 'IT合伙人', // 社区名字
-  description: 'IT圈子,创投', // 社区的描述
+  description: 'IT圈子,创投 Staging', // 社区的描述
   keywords: 'IT,创业,孵化器',
 
   // 添加到 html head 中的信息
