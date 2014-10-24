@@ -4,7 +4,7 @@
 
 var path = require('path');
 
-var debug = false;
+var debug = true;
 
 var config = {
   // debug 为 true 时，用于本地调试
@@ -13,7 +13,7 @@ var config = {
   mini_assets: !debug, // 是否启用静态文件的合并压缩，详见视图中的Loader
 
   name: 'IT合伙人', // 社区名字
-  description: 'IT圈子,创投 Staging', // 社区的描述
+  description: 'IT圈子,创投', // 社区的描述
   keywords: 'IT,创业,孵化器',
 
   // 添加到 html head 中的信息
@@ -28,22 +28,22 @@ var config = {
     [ '/about', '关于' ]
   ],
   // cdn host，如 http://cnodejs.qiniudn.com
-  site_static_host: 'http://musa-hw-club-stg1.qiniudn.com', // 静态文件存储域名
+  site_static_host: '', // 静态文件存储域名
   // 社区的域名
-  host: '115.28.162.221',
+  host: 'localhost',
   // 默认的Google tracker ID，自有站点请修改，申请地址：http://www.google.com/analytics/
   google_tracker_id: 'UA-4175xxxx-x',
 
   // mongodb 配置
-  db: 'mongodb://127.0.0.1:27017/it_par_stg',
-  db_name: 'it_par_stg',
+  db: 'mongodb://127.0.0.1:27017/it_par_debug',
+  db_name: 'it_par_debug',
 
 
-  session_secret: 'ubEtEtOk', // 务必修改
-  auth_cookie_name: 'it_par_stg',
+  session_secret: 'Nobyeam9', // 务必修改
+  auth_cookie_name: 'it_par_debug',
 
   // 程序运行的端口
-  port: 3000,
+  port: 3016,
 
   // 话题列表显示的话题数量
   list_topic_count: 20,
@@ -54,7 +54,7 @@ var config = {
   // RSS配置
   rss: {
     title: 'IT合伙人',
-    link: 'http://115.28.162.221',
+    link: 'http://cnodejs.org',
     language: 'zh-cn',
     description: 'IT圈子,创投',
     //最多获取的RSS Item数量
@@ -76,15 +76,15 @@ var config = {
   weibo_id: 'your_weibo_id',
 
   // admin 可删除话题，编辑标签，设某人为达人
-  admins: { hain9: true ,
-    kalas: true,
-    sally: true},
+  admins: { hain9: true 
+    /*kalas: true,
+    sally: true*/},
 
   // github 登陆的配置
   GITHUB_OAUTH: {
     clientID: 'f8dbb76a15529ffa80e1',
     clientSecret: '08dc91cd8cca571b310684eead7de53d7844ec7b',
-    callbackURL: 'http://115.28.162.221:3000:3016/auth/github/callback'
+    callbackURL: 'http://localhost:3016/auth/github/callback'
   },
   // 是否允许直接注册（否则只能走 github 的方式）
   allow_sign_up: true,
@@ -94,10 +94,10 @@ var config = {
 
   //7牛的access信息，用于文件上传
   qn_access: {
-    accessKey: 'AJESJBpE_S8ItnIkMlQzzEpLJEI3PeozNJN0aGeV',
-    secretKey: 'RtzTNwNku6lPb8vYktvwgpeK2zM-9pUM5dItwcDw',
-    bucket: 'musa-hw-club-stg1',
-    domain: 'http://musa-hw-club-stg1.qiniudn.com'
+    accessKey: 'your access key',
+    secretKey: 'your secret key',
+    bucket: 'your bucket name',
+    domain: 'http://{bucket}.qiniudn.com'
   },
 
   //文件上传配置
