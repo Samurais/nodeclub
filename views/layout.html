@@ -72,8 +72,10 @@
       <form id='search_form' class='navbar-search' action="/search">
         <input type='text' id='q' name='q' class='search-query span3' value=''/>
       </form>
-      <ul class='nav pull-right'>
-        <li><a href='/'>首页</a></li>
+      <ul class='nav pull-left'>
+        <li><a href='/'>创业说</a></li>
+
+        <!--
         <% if (typeof(current_user) !== 'undefined'){ %>
         <li>
             <a href='/my/messages'>
@@ -93,6 +95,10 @@
         %>
         <li><a href="<%- nav[0] %>" target="<%- nav[2] %>"><%- nav[1] %></a></li>
         <% } %>
+        -->
+      </ul>
+
+      <ul class="nav pull-right">
         <% if (typeof(current_user) !== 'undefined') { %>
         <li><a href='/setting'>设置</a></li>
         <li>
