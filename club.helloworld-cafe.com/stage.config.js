@@ -30,7 +30,7 @@ var config = {
   // cdn host，如 http://cnodejs.qiniudn.com
   site_static_host: 'http://musa-hw-club-stg1.qiniudn.com', // 静态文件存储域名
   // 社区的域名
-  host: '115.28.162.221',
+  host: 'itp.arrking.com',
   // 默认的Google tracker ID，自有站点请修改，申请地址：http://www.google.com/analytics/
   google_tracker_id: 'UA-4175xxxx-x',
 
@@ -54,7 +54,7 @@ var config = {
   // RSS配置
   rss: {
     title: 'IT合伙人',
-    link: 'http://115.28.162.221',
+    link: 'http://itp.arrking.com',
     language: 'zh-cn',
     description: 'IT圈子,创投',
     //最多获取的RSS Item数量
@@ -82,9 +82,9 @@ var config = {
 
   // github 登陆的配置
   GITHUB_OAUTH: {
-    clientID: 'f8dbb76a15529ffa80e1',
-    clientSecret: '08dc91cd8cca571b310684eead7de53d7844ec7b',
-    callbackURL: 'http://115.28.162.221:3000:3016/auth/github/callback'
+    clientID: '945509a7bd04c9bfb332',
+    clientSecret: '832856accf67b212cafbd76f878d2d52ecc83681',
+    callbackURL: 'http://itp.arrking.com/auth/github/callback'
   },
   // 是否允许直接注册（否则只能走 github 的方式）
   allow_sign_up: true,
