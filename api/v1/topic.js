@@ -1,26 +1,32 @@
-var models = require('../../models');
-var TopicModel = models.Topic;
-var TopicProxy = require('../../proxy').Topic;
-var UserProxy = require('../../proxy').User;
-var UserModel = models.User;
-var config = require('../../config');
-var eventproxy = require('eventproxy');
-var _ = require('lodash');
-var at = require('../../common/at');
+var models       = require('../../models');
+var TopicModel   = models.Topic;
+var TopicProxy   = require('../../proxy').Topic;
+var TopicCollect = require('../../proxy').TopicCollect;
+var UserProxy    = require('../../proxy').User;
+var UserModel    = models.User;
+var config       = require('../../config');
+var eventproxy   = require('eventproxy');
+var _            = require('lodash');
+var at           = require('../../common/at');
 var renderHelper = require('../../common/render_helper');
-var validator = require('validator');
+var validator    = require('validator');
 
 var index = function (req, res, next) {
-  var page = parseInt(req.query.page, 10) || 1;
-  page = page > 0 ? page : 1;
-  var tab = req.query.tab || 'all';
-  var limit = Number(req.query.limit) || config.list_topic_count;
+  var page     = parseInt(req.query.page, 10) || 1;
+  page         = page > 0 ? page : 1;
+  var tab      = req.query.tab || 'all';
+  var limit    = Number(req.query.limit) || config.list_topic_count;
   var mdrender = req.query.mdrender === 'false' ? false : true;
 
   var query = {};
   if (tab && tab !== 'all') {
-    query.tab = tab;
+    if (tab === 'good') {
+      query.good = true;
+    } else {
+      query.tab = tab;
+    }
   }
+  query.deleted = false;
   var options = { skip: (page - 1) * limit, limit: limit, sort: '-top -last_reply_at'};
 
   var ep = new eventproxy();
@@ -42,10 +48,10 @@ var index = function (req, res, next) {
     ep.after('author', topics.length, function () {
       topics = topics.map(function (topic) {
         return _.pick(topic, ['id', 'author_id', 'tab', 'content', 'title', 'last_reply_at',
-          'good', 'top', 'author']);
+          'good', 'top', 'reply_count', 'visit_count', 'create_at', 'author']);
       });
 
-      res.send({data: topics});
+      res.send({success: true, data: topics});
     });
   });
 };
@@ -53,18 +59,25 @@ var index = function (req, res, next) {
 exports.index = index;
 
 var show = function (req, res, next) {
-  var topicId = req.params.id;
-  var mdrender = req.query.mdrender === 'false' ? false : true;
+  var topicId  = String(req.params.id);
 
-  var ep = new eventproxy();
+  var mdrender = req.query.mdrender === 'false' ? false : true;
+  var ep       = new eventproxy();
+
+  if (!validator.isMongoId(topicId)) {
+    res.status(400);
+    return res.send({success: false, error_msg: '不是有效的话题id'});
+  }
+
   ep.fail(next);
 
   TopicProxy.getFullTopic(topicId, ep.done(function (msg, topic, author, replies) {
     if (!topic) {
-      return res.send({error_msg: 'topic_id `' + topicId + '` is not exists.'});
+      res.status(404);
+      return res.send({success: false, error_msg: '话题不存在'});
     }
     topic = _.pick(topic, ['id', 'author_id', 'tab', 'content', 'title', 'last_reply_at',
-      'good', 'top', 'author']);
+      'good', 'top', 'reply_count', 'visit_count', 'create_at', 'author']);
 
     if (mdrender) {
       topic.content = renderHelper.markdown(at.linkUsers(topic.content));
@@ -76,21 +89,35 @@ var show = function (req, res, next) {
         reply.content = renderHelper.markdown(at.linkUsers(reply.content));
       }
       reply.author = _.pick(reply.author, ['loginname', 'avatar_url']);
-      reply =  _.pick(reply, ['id', 'author', 'content', 'ups', 'create_at']);
+      reply =  _.pick(reply, ['id', 'author', 'content', 'ups', 'create_at', 'reply_id']);
+      reply.reply_id = reply.reply_id || null;
       return reply;
     });
-    res.send({data: topic});
+
+    ep.emit('full_topic', topic)
   }));
+
+
+  if (!req.user) {
+    ep.emitLater('is_collect', null)
+  } else {
+    TopicCollect.getTopicCollect(req.user._id, topicId, ep.done('is_collect'))
+  }
+
+  ep.all('full_topic', 'is_collect', function (full_topic, is_collect) {
+    full_topic.is_collect = !!is_collect;
+
+    res.send({success: true, data: full_topic});
+  })
+
 };
 
 exports.show = show;
 
 var create = function (req, res, next) {
-  var title = validator.trim(req.body.title);
-  title = validator.escape(title);
-  var tab = validator.trim(req.body.tab);
-  tab = validator.escape(tab);
-  var content = validator.trim(req.body.content);
+  var title   = validator.trim(req.body.title || '');
+  var tab     = validator.trim(req.body.tab || '');
+  var content = validator.trim(req.body.content || '');
 
   // 得到所有的 tab, e.g. ['ask', 'share', ..]
   var allTabs = config.tabs.map(function (tPair) {
@@ -100,21 +127,19 @@ var create = function (req, res, next) {
   // 验证
   var editError;
   if (title === '') {
-    editError = '标题不能是空的。';
+    editError = '标题不能为空';
   } else if (title.length < 5 || title.length > 100) {
-    editError = '标题字数太多或太少。';
+    editError = '标题字数太多或太少';
   } else if (!tab || allTabs.indexOf(tab) === -1) {
-    editError = '必须选择一个版块。';
+    editError = '必须选择一个版块';
   } else if (content === '') {
     editError = '内容不可为空';
   }
   // END 验证
 
   if (editError) {
-    res.status(422);
-    return res.send({
-      error_msg: editError,
-    });
+    res.status(400);
+    return res.send({success: false, error_msg: editError});
   }
 
   TopicProxy.newAndSave(title, content, tab, req.user.id, function (err, topic) {
@@ -128,7 +153,7 @@ var create = function (req, res, next) {
     proxy.all('score_saved', function () {
       res.send({
         success: true,
-        topic_id: topic.id,
+        topic_id: topic.id
       });
     });
     UserProxy.getUserById(req.user.id, proxy.done(function (user) {
@@ -145,3 +170,4 @@ var create = function (req, res, next) {
 };
 
 exports.create = create;
+

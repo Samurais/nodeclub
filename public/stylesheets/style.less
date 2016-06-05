@@ -47,11 +47,14 @@ body {
   margin: 8px 0;
   display: inline-block;
   vertical-align: bottom;
+  width: 75%;
+  line-height: 130%;
 }
 
 #content .changes {
   font-size: 12px;
   color: #838383;
+  overflow: hidden;
 
   span:before {
     content: "•"
@@ -63,9 +66,12 @@ body {
 }
 
 #content .action {
+  float: right;
+  margin-top: 8px;
+}
+#content .share {
   text-align: right;
 }
-
 #content h3 {
 }
 
@@ -486,11 +492,13 @@ a.user_avatar:hover {
   height: 40px;
 }
 
-.user_icon {
+.fa {
+  color: #000000;
   opacity: 0.4;
 }
 
-.user_icon:hover {
+.fa:hover {
+  color: #000000;
   opacity: 0.6;
 }
 
@@ -534,7 +542,8 @@ a.user_avatar:hover {
 }
 
 .reply_author {
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: bold;
 }
 
 .reply_time {
@@ -554,12 +563,12 @@ a.user_avatar:hover {
 .user_info {
   margin-left: 10px;
   display: inline-block;
-  float: right;
 }
 
 .user_action {
   float: right;
   margin-left: 20px;
+  font-size: 15px;
 }
 
 .user_action a {
@@ -609,7 +618,7 @@ a.topic_title {
   white-space: nowrap;
   overflow: hidden;
   display: inline-block;
-  vertical-align: bottom;
+  vertical-align: middle;
   font-size: 16px;
   line-height: 30px;
 }
@@ -627,7 +636,7 @@ a.topic_title {
   white-space: nowrap;
 }
 
-.put_top {
+.put_top, .put_good {
   background: @node_green;
   padding: 2px 4px;
   border-radius: 3px;
@@ -636,17 +645,6 @@ a.topic_title {
   -o-border-radius: 3px;
   color: white;
   font-size: 12px;
-}
-
-.put_good {
-  background: @node_green;
-  padding: 1px 2px;
-  border-radius: 2px;
-  -webkit-border-radius: 2px;
-  -moz-border-radius: 2px;
-  -o-border-radius: 2px;
-  color: white;
-  font-size: 13px;
 }
 
 .star_name {
@@ -674,10 +672,6 @@ img.unread {
 .user_profile {
   margin-top: 20px;
   clear: left;
-}
-
-#collect_btn {
-
 }
 
 #backtotop {
@@ -726,6 +720,15 @@ img.unread {
   color: black;
   background-color: #fcfafa;
   padding: 4px 6px;
+}
+
+
+.markdown-text img {
+  cursor: pointer;
+}
+
+.panel .markdown-text a {
+  color: #08c;
 }
 
 .preview {
@@ -973,7 +976,7 @@ div[class$=part] {
 
 textarea, textarea:focus, input, input:focus {
   box-shadow: 0px 0px 2px rgba(60, 60, 60, 0.5);
-  border: none;
+  // border: none;
 }
 
 textarea.editor {
@@ -1056,6 +1059,7 @@ textarea.editor {
   display: inline-block;
   float: none;
   padding: 3px 10px;
+  border: none;
   margin: 0;
   font-size: 14px;
   transition: all 0.2s ease-in-out;
@@ -1064,6 +1068,7 @@ textarea.editor {
   box-shadow: none;
   border-radius: 3px;
   line-height: 2em;
+  vertical-align: middle;
 
   background-color: #e5e5e5;
   &:hover {
@@ -1247,14 +1252,31 @@ textarea.editor {
   height: 200px;
 }
 
-#qrCodeModal {
-    width: 500px;
+.cnode-app-download {
+  text-align: center;
 }
 
-#topicQRCode {
-  padding-left: 0;
-  padding-right: 0;
-  margin-left: auto;
-  margin-right: auto;
-  display: block;
+// 图片预览
+#preview-modal {
+  // 左右两遍各预留 1%，因为一般屏幕比较宽，所以只留下了 1%
+  width: 98%;
+  margin-left: -49%;
+  top: 2%;
+  // 上面 2% 下面 2% 中间就剩下 96%
+  max-height: 96%;
+
+  text-align: center;
+  overflow-y: scroll;
+  display: none;
+
+  img {
+    // just for 增强好看度
+    box-shadow: 0 0 10px 5px grey;
+    cursor: pointer;
+  }
+}
+
+.about-friend-links img {
+  width: 250px;
+  height: 60px;
 }

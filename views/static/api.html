@@ -17,9 +17,9 @@
 接收 get 参数
 
 * page `Number` 页数
-* tab `String` 主题分类
+* tab `String` 主题分类。目前有 `ask` `share` `job` `good`
 * limit `Number` 每一页的主题数量
-* mdrender `String` 当为 `false` 时，不渲染。默认为 `true`
+* mdrender `String` 当为 `false` 时，不渲染。默认为 `true`，渲染出现的所有 markdown 格式文本。
 
 示例：[/api/v1/topics](/api/v1/topics)
 
@@ -27,7 +27,8 @@
 
 接收 get 参数
 
-* mdrender `String` 当为 `false` 时，不渲染。默认为 `true`
+* mdrender `String` 当为 `false` 时，不渲染。默认为 `true`，渲染出现的所有 markdown 格式文本。
+* accesstoken `String` 当需要知道一个主题是否被特定用户收藏时，才需要带此参数。会影响返回值中的 `is_collect` 值。
 
 示例：[/api/v1/topic/5433d5e4e737cbe96dcef312](/api/v1/topic/5433d5e4e737cbe96dcef312)
 
@@ -35,6 +36,7 @@
 
 接收 post 参数
 
+* accesstoken `String` 用户的 accessToken
 * title `String` 标题
 * tab `String` 目前有 `ask` `share` `job`
 * content `String` 主体内容
@@ -44,6 +46,39 @@
 ```js
 {success: true, topic_id: '5433d5e4e737cbe96dcef312'}
 ```
+
+
+### 主题收藏
+
+#### post /topic_collect/collect 收藏主题
+
+接收 post 参数
+
+* accesstoken `String` 用户的 accessToken
+* topic_id `String` 主题的id
+
+返回值示例
+
+```js
+{"success": true}
+```
+
+#### post /topic_collect/de_collect 取消主题
+
+接收 post 参数
+
+* accesstoken `String` 用户的 accessToken
+* topic_id `String` 主题的id
+
+返回值示例
+
+```js
+{success: true}
+```
+#### get /topic_collect/:loginname 用户所收藏的主题
+
+示例：[/api/v1/topic_collect/alsotang](/api/v1/topic_collect/alsotang)
+
 
 ### 评论
 
@@ -106,7 +141,7 @@
 返回值示例
 
 ```js
-{ data: 1 }
+{ data: 3 }
 ```
 
 
@@ -115,6 +150,7 @@
 接收 get 参数
 
 * accesstoken `String`
+* mdrender `String` 当为 `false` 时，不渲染。默认为 `true`，渲染出现的所有 markdown 格式文本。
 
 返回值示例
 

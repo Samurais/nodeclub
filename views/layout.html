@@ -6,6 +6,8 @@
   <meta name='description' content='<%= config.description %>'>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="keywords" content="<%= config.keywords %>"/>
+  <!-- see http://smerity.com/articles/2013/where_did_all_the_http_referrers_go.html -->
+  <meta name="referrer" content="always">
 
   <%
   var headers = config.site_headers || [];
@@ -30,8 +32,11 @@
   .css('/public/libs/editor/editor.css')
   .css('/public/libs/webuploader/webuploader.css')
   .css('/public/libs/code-prettify/prettify.css')
+  .css('/public/libs/font-awesome/css/font-awesome.css')
   .done(assets, config.site_static_host, config.mini_assets)
   %>
+
+  <!-- scripts -->
   <%- Loader('/public/index.min.js')
   .js('/public/libs/jquery-2.1.0.js')
   .js('/public/libs/lodash.compat.js')
@@ -39,12 +44,14 @@
   .js('/public/libs/bootstrap/js/bootstrap.js')
   .js('/public/libs/jquery.caret.js')
   .js('/public/libs/jquery.atwho.js')
-  .js('/public/libs/remarkable.js')
+  .js('/public/libs/markdownit.js')
   .js('/public/libs/code-prettify/prettify.js')
+  .js('/public/libs/qrcode.js')
   .js('/public/javascripts/main.js')
   .js('/public/javascripts/responsive.js')
   .done(assets, config.site_static_host, config.mini_assets)
   %>
+
   <% if (typeof(topic) !== 'undefined') { %>
   <title><%= topic.title %> - <%= config.name %></title>
   <% } else if (typeof(pageTitle) !== 'undefined') { %>
@@ -54,8 +61,6 @@
   <% } %>
   <meta content="_csrf" name="csrf-param">
   <meta content="<%= csrf %>" name="csrf-token">
-  <!-- 创建微博 App 的验证信息 -->
-  <meta property="wb:webmaster" content="27df391315f023b0" />
 </head>
 <body>
 <!-- navbar -->
@@ -75,7 +80,7 @@
       </form>
       <ul class='nav pull-right'>
         <li><a href='/'>首页</a></li>
-        <% if (typeof(current_user) !== 'undefined'){ %>
+        <% if (current_user){ %>
         <li>
             <a href='/my/messages'>
               <% if (current_user.messages_count) { %>
@@ -94,7 +99,7 @@
         %>
         <li><a href="<%- nav[0] %>" target="<%- nav[2] %>"><%- nav[1] %></a></li>
         <% } %>
-        <% if (typeof(current_user) !== 'undefined') { %>
+        <% if (current_user) { %>
         <li><a href='/setting'>设置</a></li>
         <li>
           <a href='/signout' data-method="post" rel="nofollow">退出</a>
@@ -129,43 +134,25 @@
   </div>
 </div>
 <div id="sidebar-mask"></div>
+
+<% if (config.google_tracker_id) { %>
 <script>
+  // google analytics
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  })(window,document,'script', "<%- proxy('https://www.google-analytics.com/analytics.js') %>",'ga');
 
   ga('create', '<%-config.google_tracker_id%>', 'auto');
   ga('send', 'pageview');
 </script>
-<script>
-    (function(){
-        if (!window.addEventListener) return;
-        window.addEventListener('load', function(){
-            var performance = window.performance;
-            if (performance === undefined) return;
-            timing = window.performance.timing;
-            if (timing === undefined) return;
+<% } %>
 
-            if (document.cookie.indexOf('statistics_clientid=') != -1) return;
+<% if (config.cnzz_tracker_id) { %>
+<div style="display:none;">
+  <script src="//s95.cnzz.com/z_stat.php?id=<%- config.cnzz_tracker_id %>&web_id=<%- config.cnzz_tracker_id %>" language="JavaScript"></script>
+</div>
+<% } %>
 
-            var domain_lookup_time = timing.domainLookupEnd - timing.domainLookupStart;
-            var connect_time = timing.connectEnd - timing.connectStart;
-            var read_content_time = timing.responseEnd - timing.responseStart;
-
-            new Image().src = ('https:' == document.location.protocol ? 'https://' : 'http://')
-                + 'stat.dnspod.cn/statistics/'
-                + domain_lookup_time + "/"
-                + connect_time + "/"
-                + read_content_time + ".png";
-
-            var exdate=new Date();
-            exdate.setDate(exdate.getDate() + 1);
-            document.cookie="statistics_clientid=me"
-            + ";expires="+exdate.toGMTString();
-
-        }, false);
-    }());
-</script>
 </body>
 </html>

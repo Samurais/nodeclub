@@ -1,15 +1,12 @@
-var validator = require('validator');
-var _ = require('lodash');
-
-var at = require('../common/at');
-var message = require('../common/message');
-
+var validator  = require('validator');
+var _          = require('lodash');
+var at         = require('../common/at');
+var message    = require('../common/message');
 var EventProxy = require('eventproxy');
-
-var User = require('../proxy').User;
-var Topic = require('../proxy').Topic;
-var Reply = require('../proxy').Reply;
-var config = require('../config');
+var User       = require('../proxy').User;
+var Topic      = require('../proxy').Topic;
+var Reply      = require('../proxy').Reply;
+var config     = require('../config');
 
 /**
  * 添加回复
@@ -19,11 +16,9 @@ exports.add = function (req, res, next) {
   var topic_id = req.params.topic_id;
   var reply_id = req.body.reply_id;
 
-  var str = validator.trim(content);
+  var str = validator.trim(String(content));
   if (str === '') {
-    res.status(422);
-    res.render('notify/notify', {error: '回复内容不能为空！'});
-    return;
+    return res.renderError('回复内容不能为空!', 422);
   }
 
   var ep = EventProxy.create();
@@ -34,6 +29,10 @@ exports.add = function (req, res, next) {
       ep.unbind();
       // just 404 page
       return next();
+    }
+
+    if (topic.lock) {
+      return res.status(403).send('此主题已锁定。');
     }
     ep.emit('topic', topic);
   }));
@@ -88,8 +87,9 @@ exports.delete = function (req, res, next) {
       res.json({status: 'no reply ' + reply_id + ' exists'});
       return;
     }
-    if (reply.author_id.toString() === req.session.user._id.toString()) {
-      reply.remove();
+    if (reply.author_id.toString() === req.session.user._id.toString() || req.session.user.is_admin) {
+      reply.deleted = true;
+      reply.save();
       res.json({status: 'success'});
 
       if (!reply.reply_id) {
@@ -113,9 +113,7 @@ exports.showEdit = function (req, res, next) {
 
   Reply.getReplyById(reply_id, function (err, reply) {
     if (!reply) {
-      res.status(422);
-      res.render('notify/notify', {error: '此回复不存在或已被删除。'});
-      return;
+      return res.render404('此回复不存在或已被删除。');
     }
     if (req.session.user._id.equals(reply.author_id) || req.session.user.is_admin) {
       res.render('reply/edit', {
@@ -123,8 +121,7 @@ exports.showEdit = function (req, res, next) {
         content: reply.content
       });
     } else {
-      res.status(403);
-      res.render('notify/notify', {error: '对不起，你不能编辑此回复。'});
+      return res.renderError('对不起，你不能编辑此回复。', 403);
     }
   });
 };
@@ -137,8 +134,7 @@ exports.update = function (req, res, next) {
 
   Reply.getReplyById(reply_id, function (err, reply) {
     if (!reply) {
-      res.render('notify/notify', {error: '此回复不存在或已被删除。'});
-      return;
+      return res.render404('此回复不存在或已被删除。');
     }
 
     if (String(reply.author_id) === req.session.user._id.toString() || req.session.user.is_admin) {
@@ -152,10 +148,10 @@ exports.update = function (req, res, next) {
           res.redirect('/topic/' + reply.topic_id + '#' + reply._id);
         });
       } else {
-        res.render('notify/notify', {error: '回复的字数太少。'});
+        return res.renderError('回复的字数太少。', 400);
       }
     } else {
-      res.render('notify/notify', {error: '对不起，你不能编辑此回复。'});
+      return res.renderError('对不起，你不能编辑此回复。', 403);
     }
   });
 };

@@ -8,7 +8,7 @@
     </div>
   </div>
 
-  <% if (typeof(current_user) === 'undefined' || !current_user.isAdvanced) { %>
+  <% if (!current_user || !current_user.isAdvanced) { %>
     <%- partial('../_ads') %>
   <% } %>
 
@@ -67,10 +67,9 @@
 
         <%= topic.title %>
       </span>
-
       <div class="changes">
         <span>
-          发布于 <%= topic.friendly_create_at %>
+          发布于 <%= topic.create_at_ago() %>
         </span>
         <span>
           作者 <a href="/user/<%= topic.author.loginname %>"><%= topic.author.loginname %></a>
@@ -78,66 +77,67 @@
         <span>
           <%= topic.visit_count %> 次浏览
         </span>
-        <% if (topic.friendly_create_at != topic.friendly_update_at) { %>
+        <% if (topic.create_at_ago() != topic.update_at_ago()) { %>
           <span>
-            最后一次编辑是 <%= topic.friendly_update_at %>
+            最后一次编辑是 <%= topic.update_at_ago() %>
           </span>
         <% } %>
         <% if (topic.tab) { %>
           <span> 来自 <%= topic.tabName %></span>
         <%}%>
+
+        <% if (current_user) { %>
+          <input class="span-common <%= is_collect ? '' : 'span-success' %> pull-right collect_btn" type="submit" value="<%= is_collect ? '取消收藏' : '收藏' %>" action="<%= is_collect ? 'de_collect' : 'collect' %>">
+        <%}%>
+
       </div>
-      <% if (typeof(current_user) !== 'undefined') { %>
+      <% if (current_user) { %>
       <div id="manage_topic">
         <% if (current_user.is_admin) { %>
+          <a href='/topic/<%= topic._id %>/top' data-method="post">
+            <% if (topic.top) { %>
+              <i class="fa fa-lg fa-star-o" title='取消置顶'></i>
+            <% } else { %>
+              <i class="fa fa-lg fa-star" title='置顶'/></i>
+            <% } %>
+          </a>
 
-        <% if (topic.top) { %>
-        <a href='/topic/<%= topic._id %>/top/0' data-method="post">
-          <img class='user_icon'
-               src='<%- staticFile("/public/images/star_fav_icon&16.png") %>'
-               title='取消置顶'/>
-        </a>
-        <% } else { %>
-        <a href='/topic/<%= topic._id %>/top/1' data-method="post">
-          <img class='user_icon'
-               src='<%- staticFile("/public/images/star_fav_empty_icon&16.png") %>'
-               title='置顶'/>
-        </a>
+
+          <a href='/topic/<%= topic._id %>/good' data-method="post">
+            <% if (topic.good) { %>
+              <i class="fa fa-lg fa-heart-o" title="取消精华"></i>
+            <% } else { %>
+              <i class="fa fa-lg fa-heart" title="加精华"></i>
+            <% } %>
+          </a>
+
+          <a href='/topic/<%= topic._id %>/lock' data-method="post">
+            <% if (topic.lock) { %>
+              <i class="fa fa-lg fa-unlock" title='取消锁定'></i>
+            <% } else { %>
+              <i class="fa fa-lg fa-lock" title='锁定（不可再回复）'/></i>
+            <% } %>
+          </a>
+
+
+          <a href='/topic/<%= topic._id %>/edit'>
+            <i class="fa fa-lg fa-pencil-square-o" title='编辑'></i></a>
+          <a href='javascript:;'
+             data-id="<%= topic._id %>"
+             class='delete_topic_btn'>
+             <i class="fa fa-lg fa-trash" title='删除'></i></a>
+          <% } else { %>
+          <% if (current_user._id.equals(topic.author_id)) { %>
+          <a href='/topic/<%= topic._id %>/edit'>
+            <i class="fa fa-lg fa-pencil-square-o" title='编辑'></i></a>
+          <a href='javascript:;'
+             data-id="<%= topic._id %>"
+             class='delete_topic_btn'>
+             <i class="fa fa-lg fa-trash" title='删除'></i></a>
+          <% } %>
         <% } %>
 
-        <% if (topic.good) { %>
-        <a href='/topic/<%= topic._id %>/good/0' data-method="post">
-          取消精华
-        </a>
-        <% } else { %>
-        <a href='/topic/<%= topic._id %>/good/1' data-method="post">
-          设为精华
-        </a>
-        <% } %>
 
-        <a href='/topic/<%= topic._id %>/edit'>
-          <img
-                  class='user_icon'
-                  src='<%- staticFile("/public/images/doc_edit_icon&16.png") %>'
-                  title='编辑'/></a>
-        <a href='javascript:;'
-           data-id="<%= topic._id %>"
-           class='delete_topic_btn'><img class='user_icon'
-                                         src='<%- staticFile("/public/images/trash_icon&16.png") %>'
-                                         title='删除'/></a>
-        <% } else { %>
-        <% if (current_user._id.equals(topic.author_id)) { %>
-        <a href='/topic/<%= topic._id %>/edit'>
-          <img class='user_icon'
-               src='<%- staticFile("/public/images/doc_edit_icon&16.png") %>'
-               title='编辑'/></a>
-        <a href='javascript:;'
-           data-id="<%= topic._id %>"
-           class='delete_topic_btn'><img class='user_icon'
-           src='<%- staticFile("/public/images/trash_icon&16.png") %>'
-           title='删除'/></a>
-        <% } %>
-        <% } %>
       </div>
       <% } %>
     </div>
@@ -145,20 +145,6 @@
 
       <div class='topic_content'>
         <%- markdown(topic.linkedContent) %>
-      </div>
-
-      <div class="action">
-        <span class='span-common span-success' id='share_wechat_btn' onclick="shareTopicViaWechat()">分享到微信</span>
-        <span class='span-success' id='share_weibo_btn'
-              onclick="((function(s,d,e,r,l,p,t,z,c){var f='http://v.t.sina.com.cn/share/share.php?appkey=<%= config.weibo_key %>',u=z||d.location,p=['&url=',e(u),'&title=',e(t||d.title),'&source=',e(r),'&sourceUrl=',e(l),'&content=',c||'gb2312','&pic=',e(p||'')].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=440,height=430,left=',(s.width-440)/2,',top=',(s.height-430)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent))setTimeout(a,0);else a();})(screen,document,encodeURIComponent,'','','','@<%= config.weibo_id %> 分享来自<%= config.name %>的话题：<%= topic.title %>','',''));"
-                >分享到微博</span>
-        <% if (typeof(current_user) !== 'undefined') { %>
-        <% if (!topic.in_collection) { %>
-        <span class='span-common span-success' id='collect_btn' action='collect'>加入收藏</span>
-        <% } else { %>
-        <span class='span-common span-success' id='collect_btn' action='de_collect'>取消收藏</span>
-        <% } %>
-        <% } %>
       </div>
     </div>
   </div>
@@ -170,7 +156,7 @@
     <%- partial('../reply/reply', topic.replies) %>
   </div>
   <% } %>
-  <% if (typeof(current_user) !== 'undefined' && typeof(topic) !== 'undefined') { %>
+  <% if (current_user && typeof(topic) !== 'undefined') { %>
   <div class='panel'>
     <div class='header'>
       <span class='col_fade'>添加回复</span>
@@ -183,7 +169,7 @@
             <textarea class='editor' name='r_content' rows='8'></textarea>
 
             <div class='editor_buttons'>
-              <input class='span-primary submit_btn' type="submit" data-loading-text="回复中.." value="回复">
+              <input class='span-primary submit_btn' type="submit" data-loading-text="回复中.." value="回复<%= topic.lock ? '(此主题已锁定)' : ''%>" <%= topic.lock ? 'disabled="disabled"' : ''%>>
             </div>
           </div>
 
@@ -201,9 +187,17 @@
   <div class="anchor"></div>
 </div>
 
+<!-- 预览模态对话框 -->
+<div class="modal fade" id="preview-modal">
+  <div class="modal-body" style="max-height: initial;">
+    <img src="" alt="点击内容或者外部自动关闭图片预览" id="preview-image">
+  </div>
+</div>
 
-<% if (typeof(current_user) !== 'undefined' && typeof(topic) !== 'undefined') { %>
+
+<% if (current_user && typeof(topic) !== 'undefined') { %>
 <!-- markdown editor -->
+<<<<<<< HEAD
 <%- Loader('/public/editor.min.js')
 .js('/public/libs/editor/editor.js')
 .js('/public/libs/webuploader/webuploader.withoutimage.js')
@@ -211,12 +205,14 @@
 .js('/public/libs/qrcode.min.js')
 .done(assets, config.site_static_host, config.mini_assets)
 %>
+<%- partial('../includes/editor') %>
 <script>
   $(document).ready(function () {
     // 获取所有回复者name
     var allNames = $('.reply_author').map(function (idx, ele) {
       return $(ele).text().trim();
     }).toArray();
+    allNames.push($('.user_card .user_name').text())
     allNames = _.uniq(allNames);
     // END 获取所有回复者name
 
@@ -298,7 +294,7 @@
     // END 评论回复
 
     // 加入收藏
-    $('#collect_btn').click(function () {
+    $('.collect_btn').click(function () {
       var $me = $(this);
       var action = $me.attr('action');
       var data = {
@@ -309,10 +305,10 @@
       $.post('/topic/' + action, data, function (data) {
         if (data.status === 'success') {
           if (action == 'collect') {
-            $me.text('取消收藏');
+            $me.val('取消收藏');
             $me.attr('action', 'de_collect');
           } else {
-            $me.text('加入收藏');
+            $me.val('收藏');
             $me.attr('action', 'collect');
           }
           $me.toggleClass('span-success');
@@ -426,7 +422,10 @@
             var replyContent = $replyItem.find('.reply_content').text().trim();
             if (replyContent.length > 0) {
               chats.push([
-                $replyItem.find('.user_avatar').html(), // avatar
+                $($replyItem.find('.user_avatar').html()).attr({
+                  height: '30px',
+                  width: '30px',
+                }), // avatar
                 (replyContent.length>300?replyContent.substr(0,300)+'...':replyContent), // reply content
                 '<a href="#'+replyToId+'" class="scroll_to_original" title="查看原文">↑</a>'
               ]);
@@ -486,17 +485,46 @@
       }
     });
   });
-  // END 点赞 
-  
-  // popup a dialog with QR Code encoded
-  function shareTopicViaWechat(){
-    var qrcodedraw = new QRCodeLib.QRCodeDraw();
-    qrcodedraw.draw(document.getElementById('topicQRCode'), window.location.href, function(error,canvas){
-      if(error){
-        return console.error('Error =( ',error);
+  // END 点赞
+  // 图片预览
+  (function(){
+    var $previewModal = $('#preview-modal');
+    var $previewImage = $('#preview-image');
+    var $body = $('body'); // cache
+
+    $(document).on('click', '.markdown-text img', function(e) {
+      var $img = $(this);
+      // 图片被a标签包裹时，不显示弹层
+      if ($img.parent('a').length > 0) {
+        return;
       }
-      console.log('success!');
-      $('#qrCodeModal').modal('show');
+      showModal($img.attr('src'));
     });
-  }
+
+    $previewModal.on('click', hideModal);
+
+    $previewModal.on('hidden.bs.modal', function() {
+      // 在预览框消失之后恢复 body 的滚动能力
+      $body.css('overflow-y', 'scroll');
+    })
+
+    $previewModal.on('shown.bs.modal', function() {
+      // 修复上次滚动留下的痕迹,可能会导致短暂的闪烁，不过可以接受
+      // TODO: to be promote
+      $previewModal.scrollTop(0);
+    })
+
+    function showModal(src) {
+      $previewImage.attr('src', src);
+      $previewModal.modal('show');
+      // 禁止 body 滚动
+      $body.css('overflow-y', 'hidden');
+    }
+
+    function hideModal() {
+      $previewModal.modal('hide');
+    }
+
+  })()
+  // END 图片预览
 </script>

@@ -9,7 +9,7 @@
     </div>
     <div class='inner userinfo'>
       <div class='user_big_avatar'>
-        <img src="<%= user.avatar_url %>" class="user_avatar" title="<%= user.loginname %>"/>
+        <img src="<%= proxy(user.avatar_url) %>" class="user_avatar" title="<%= user.loginname %>"/>
       </div>
       <a class='dark'><%= user.loginname %></a>
 
@@ -19,26 +19,25 @@
           <% if (user.collect_topic_count) {%>
           <li>
             <a class='dark' href="/user/<%= user.loginname %>/collections" target='_blank'>
-              <span class='big collect-topic-count'><%= user.collect_topic_count %></span>话题收藏
+              <span class='big collect-topic-count'><%= user.collect_topic_count %></span>个话题收藏
             </a>
           </li>
           <%}%>
           <% if (user.url) { %>
           <li>
-            <img class='user_icon'
-                 src="<%- staticFile('/public/images/paper_airplane_icon&16.png') %>"/>
+            <i class="fa fa-lg fa-fw fa-home"></i>
             <a class='dark' href="<%= user.url %>" target='_blank'><%= user.url %></a>
           </li>
           <% } %>
           <% if (user.location) { %>
           <li>
-            <img class='user_icon' src="<%- staticFile('/public/images/compass_icon&16.png') %>"/>
+            <i class="fa fa-lg fa-fw fa-map-marker"></i>
             <span class='dark'><%= user.location %></span>
           </li>
           <% } %>
           <% if (user.githubUsername) { %>
           <li>
-            <img class='user_icon' src="<%- staticFile('/public/images/github_icon&16.png') %>"/>
+            <i class="fa fa-lg fa-fw fa-github"></i>
             <a class='dark' href="https://github.com/<%= user.githubUsername %>" target='_blank'>
               @<%= user.githubUsername %>
             </a>
@@ -46,15 +45,14 @@
           <% } %>
           <% if (user.weibo) { %>
           <li>
-            <img class='user_icon'
-                 src="<%- staticFile('/public/images/twitter_2_icon&16.png') %>"/>
+            <i class="fa fa-lg fa-fw fa-twitter"></i>
             <a class='dark' href="<%= user.weibo %>" target='_blank'><%= user.weibo %></a>
           </li>
           <% } %>
         </ul>
       </div>
-      <p class='col_fade'>注册时间 <%= user.friendly_create_at %></p>
-      <% if (typeof(current_user) !== 'undefined' && current_user.is_admin) { %>
+      <p class='col_fade'>注册时间 <%= user.create_at_ago() %></p>
+      <% if (current_user && current_user.is_admin) { %>
       <% if (!user.is_star) { %>
       <span class='span-common' id='set_star_btn' action='set_star'>设为达人</span>
       <% } else { %>
@@ -116,7 +114,7 @@
   </div>
 </div>
 
-<% if (typeof(current_user) !== 'undefined') { %>
+<% if (current_user) { %>
 <script>
   $(document).ready(function () {
     $('#set_star_btn').click(function () {
@@ -155,7 +153,7 @@
             $me.html('取消屏蔽用户');
             $me.attr('action', 'cancel_block');
           } else if (action === 'cancel_block') {
-            $me.html('屏蔽用户并删其所有帖');
+            $me.html('屏蔽用户');
             $me.attr('action', 'set_block');
           }
         }
@@ -167,7 +165,7 @@
       var params = {
         _csrf: '<%- csrf %>',
       };
-      if (!confirm('确定要删除吗？此操作不可逆')) {
+      if (!confirm('确定要删除吗？（不会永久删除，只做标记位）')) {
         return;
       }
       $.post('/user/<%- user.loginname %>/delete_all', params, function (data) {

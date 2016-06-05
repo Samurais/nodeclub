@@ -1,6 +1,6 @@
-(function(Editor, Remarkable, WebUploader){
+(function(Editor, markdownit, WebUploader){
     // Set default options
-    var md = new Remarkable();
+    var md = new markdownit();
 
     md.set({
       html:         false,        // Enable HTML tags in source
@@ -11,7 +11,7 @@
       typographer:  false,        // Enable smartypants and other sweet transforms
     });
 
-    window.remarkable = md;
+    window.markdowniter = md;
 
     var toolbar = Editor.toolbar;
 
@@ -149,7 +149,7 @@
         this.uploader.on('uploadSuccess', function(file, res){
             if(res.success){
                 self.$win.modal('hide');
-                self.editor.push(' !['+ file.name +']('+ res.url +')');
+                self.editor.push('!['+ file.name +']('+ res.url +')');
             }
             else{
                 self.removeFile();
@@ -243,4 +243,4 @@
         var line = cm.lastLine();
         cm.setLine(line, cm.getLine(line) + txt);
     };
-})(window.Editor, window.Remarkable, window.WebUploader);
+})(window.Editor, window.markdownit, window.WebUploader);
