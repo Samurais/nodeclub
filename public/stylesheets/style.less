@@ -6,7 +6,7 @@
 /* base */
 body {
   background-color: @gray1;
-  font-family: "Helvetica Neue", "Luxi Sans", "DejaVu Sans", Tahoma, "Hiragino Sans GB", STHeiti !important;
+  font-family: "Helvetica Neue", "Luxi Sans", "DejaVu Sans", Tahoma, "Hiragino Sans GB", STHeiti, sans-serif !important;
 }
 
 #main {
@@ -98,6 +98,11 @@ body {
   clear: both;
   position: relative;
   background: white;
+  &.fix-bottom{
+      position: fixed;
+      bottom: 0;
+      width:100%;
+  }
 }
 
 #footer_main {
@@ -546,6 +551,13 @@ a.user_avatar:hover {
   font-weight: bold;
 }
 
+.reply_by_author {
+  color: #fff;
+  background-color: #6ba44e;
+  padding: 2px;
+  font-size: 12px;
+}
+
 .reply_time {
   font-size: 11px;
 }
@@ -569,10 +581,14 @@ a.user_avatar:hover {
   float: right;
   margin-left: 20px;
   font-size: 15px;
-}
 
-.user_action a {
-  text-decoration: none;
+  a {
+    text-decoration: none;
+  }
+
+  .up-count {
+    color: gray;
+  }
 }
 
 .reply_content {
@@ -727,6 +743,13 @@ img.unread {
   cursor: pointer;
 }
 
+.markdown-text {
+  h1 code, h2 code, h3 code, h4 code, h5 code, h6 code {
+    font-size: inherit;
+    color: inherit;
+  }
+}
+
 .panel .markdown-text a {
   color: #08c;
 }
@@ -804,7 +827,15 @@ textarea#title {
   padding: 4px 0px 0px 20px;
   width: 120px;
   padding: 3px 20px;
-  height: 28px;
+  height: 34px;
+  line-height: 34px;
+  text-shadow: none;
+  color: #cccccc;
+  font-weight: 700;
+
+  img {
+    vertical-align: initial;   
+  }
 }
 
 .navbar .navbar-search {
@@ -1279,4 +1310,8 @@ textarea.editor {
 .about-friend-links img {
   width: 250px;
   height: 60px;
+}
+
+.sponsor_outlink:hover {
+  text-decoration: none;
 }

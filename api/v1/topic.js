@@ -19,7 +19,9 @@ var index = function (req, res, next) {
   var mdrender = req.query.mdrender === 'false' ? false : true;
 
   var query = {};
-  if (tab && tab !== 'all') {
+  if (!tab || tab === 'all') {
+    query.tab = {$nin: ['job', 'dev']}
+  } else {
     if (tab === 'good') {
       query.good = true;
     } else {
@@ -76,6 +78,10 @@ var show = function (req, res, next) {
       res.status(404);
       return res.send({success: false, error_msg: '话题不存在'});
     }
+    
+    topic.visit_count += 1;
+    topic.save();
+
     topic = _.pick(topic, ['id', 'author_id', 'tab', 'content', 'title', 'last_reply_at',
       'good', 'top', 'reply_count', 'visit_count', 'create_at', 'author']);
 
@@ -91,6 +97,13 @@ var show = function (req, res, next) {
       reply.author = _.pick(reply.author, ['loginname', 'avatar_url']);
       reply =  _.pick(reply, ['id', 'author', 'content', 'ups', 'create_at', 'reply_id']);
       reply.reply_id = reply.reply_id || null;
+
+      if (reply.ups && req.user && reply.ups.indexOf(req.user._id) != -1) {
+        reply.is_uped = true;
+      } else {
+        reply.is_uped = false;
+      }
+
       return reply;
     });
 
@@ -130,7 +143,7 @@ var create = function (req, res, next) {
     editError = '标题不能为空';
   } else if (title.length < 5 || title.length > 100) {
     editError = '标题字数太多或太少';
-  } else if (!tab || allTabs.indexOf(tab) === -1) {
+  } else if (!tab || !_.includes(allTabs, tab)) {
     editError = '必须选择一个版块';
   } else if (content === '') {
     editError = '内容不可为空';
@@ -170,4 +183,62 @@ var create = function (req, res, next) {
 };
 
 exports.create = create;
+
+exports.update = function (req, res, next) {
+  var topic_id = _.trim(req.body.topic_id);
+  var title    = _.trim(req.body.title);
+  var tab      = _.trim(req.body.tab);
+  var content  = _.trim(req.body.content);
+
+  // 得到所有的 tab, e.g. ['ask', 'share', ..]
+  var allTabs = config.tabs.map(function (tPair) {
+    return tPair[0];
+  });
+
+  TopicProxy.getTopicById(topic_id, function (err, topic, tags) {
+    if (!topic) {
+      res.status(400);
+      return res.send({success: false, error_msg: '此话题不存在或已被删除。'});
+    }
+
+    if (topic.author_id.equals(req.user._id) || req.user.is_admin) {
+      // 验证
+      var editError;
+      if (title === '') {
+        editError = '标题不能是空的。';
+      } else if (title.length < 5 || title.length > 100) {
+        editError = '标题字数太多或太少。';
+      } else if (!tab || !_.includes(allTabs, tab)) {
+        editError = '必须选择一个版块。';
+      }
+      // END 验证
+
+      if (editError) {
+        return res.send({success: false, error_msg: editError});
+      }
+
+      //保存话题
+      topic.title     = title;
+      topic.content   = content;
+      topic.tab       = tab;
+      topic.update_at = new Date();
+
+      topic.save(function (err) {
+        if (err) {
+          return next(err);
+        }
+        //发送at消息
+        at.sendMessageToMentionUsers(content, topic._id, req.user._id);
+
+        res.send({
+          success: true,
+          topic_id: topic.id
+        });
+      });
+    } else {
+      res.status(403)
+      return res.send({success: false, error_msg: '对不起，你不能编辑此话题。'});
+    }
+  });
+};
 

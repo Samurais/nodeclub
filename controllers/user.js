@@ -10,8 +10,8 @@ var tools        = require('../common/tools');
 var config       = require('../config');
 var EventProxy   = require('eventproxy');
 var validator    = require('validator');
-var utility      = require('utility');
 var _            = require('lodash');
+var uuid = require('node-uuid')
 
 exports.index = function (req, res, next) {
   var user_name = req.params.name;
@@ -197,8 +197,8 @@ exports.listCollectedTopics = function (req, res, next) {
     if (err || !user) {
       return next(err);
     }
-
-    var render = function (topics, pages) {
+    var pages = Math.ceil(user.collect_topic_count/limit);
+    var render = function (topics) {
       res.render('user/collect_topics', {
         topics: topics,
         current_page: page,
@@ -207,7 +207,7 @@ exports.listCollectedTopics = function (req, res, next) {
       });
     };
 
-    var proxy = EventProxy.create('topics', 'pages', render);
+    var proxy = EventProxy.create('topics', render);
     proxy.fail(next);
 
     var opt = {
@@ -226,10 +226,6 @@ exports.listCollectedTopics = function (req, res, next) {
           return ids.indexOf(String(topic._id))
         })
         return topics
-      }));
-      Topic.getCountByQuery(query, proxy.done(function (all_topics_count) {
-        var pages = Math.ceil(all_topics_count / limit);
-        proxy.emit('pages', pages);
       }));
     }));
   });
@@ -375,10 +371,24 @@ exports.deleteAll = function (req, res, next) {
         res.json({status: 'success'});
       });
     // 删除主题
-    TopicModel.update({author_id: user._id}, {$set: {deleted: true}}, {multi: true}, ep.done('del_topics'));
+    TopicModel.updateMany({author_id: user._id}, {$set: {deleted: true}}, ep.done('del_topics'));
     // 删除评论
-    ReplyModel.update({author_id: user._id}, {$set: {deleted: true}}, {multi: true}, ep.done('del_replys'));
+    ReplyModel.updateMany({author_id: user._id}, {$set: {deleted: true}}, ep.done('del_replys'));
     // 点赞数也全部干掉
-    ReplyModel.update({}, {$pull: {'ups': user._id}}, {multi: true}, ep.done('del_ups'));
+    ReplyModel.updateMany({}, {$pull: {'ups': user._id}}, ep.done('del_ups'));
+  }));
+};
+
+exports.refreshToken = function (req, res, next) {
+  var user_id = req.session.user._id;
+
+  var ep = EventProxy.create();
+  ep.fail(next);
+
+   User.getUserById(user_id, ep.done(function (user) {
+    user.accessToken = uuid.v4();
+    user.save(ep.done(function () {
+      res.json({status: 'success', accessToken: user.accessToken});
+    }));
   }));
 };

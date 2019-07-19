@@ -6,13 +6,19 @@ var support = require('../../support/support');
 describe('test/api/v1/topic.test.js', function () {
   
   var mockUser, mockTopic;
-  
+
+  var createdTopicId = null;
+
   before(function (done) {
     support.createUser(function (err, user) {
       mockUser = user;
       support.createTopic(user.id, function (err, topic) {
         mockTopic = topic;
-        done();
+        support.createReply(topic.id, user.id, function (err, reply) {
+          support.createSingleUp(reply.id, user.id, function (err, reply) {
+            done();
+          });
+        });
       });
     });
   });
@@ -82,6 +88,39 @@ describe('test/api/v1/topic.test.js', function () {
         });
     });
 
+    it('should is_uped to be false without accesstoken', function (done) {
+      request.get('/api/v1/topic/' + mockTopic.id)
+        .end(function (err, res) {
+          should.not.exists(err);
+          res.body.data.replies[0].is_uped.should.false();
+          done();
+        });
+    });
+
+    it('should is_uped to be false with wrong accesstoken', function (done) {
+      request.get('/api/v1/topic/' + mockTopic.id)
+        .query({
+          accesstoken: support.normalUser2.accesstoken
+        })
+        .end(function (err, res) {
+          should.not.exists(err);
+          res.body.data.replies[0].is_uped.should.false();
+          done();
+        });
+    });
+
+    it('should is_uped to be true with right accesstoken', function (done) {
+      request.get('/api/v1/topic/' + mockTopic.id)
+        .query({
+          accesstoken: mockUser.accessToken
+        })
+        .end(function (err, res) {
+          should.not.exists(err);
+          res.body.data.replies[0].is_uped.should.true();
+          done();
+        });
+    });
+
   });
 
   describe('post /api/v1/topics', function () {
@@ -98,6 +137,7 @@ describe('test/api/v1/topic.test.js', function () {
           should.not.exists(err);
           res.body.success.should.true();
           res.body.topic_id.should.be.String();
+          createdTopicId = res.body.topic_id
           done();
         });
     });
@@ -166,5 +206,24 @@ describe('test/api/v1/topic.test.js', function () {
     });
 
   });
+
+  describe('post /api/v1/topics/update', function () {
+    it('should update a topic', function (done) {
+      request.post('/api/v1/topics/update')
+        .send({
+          accesstoken: mockUser.accessToken,
+          topic_id: createdTopicId,
+          title: '我是API测试标题',
+          tab: 'share',
+          content: '我是API测试内容 /api/v1/topics/update'
+        })
+        .end(function (err, res) {
+          should.not.exists(err);
+          res.body.success.should.true();
+          res.body.topic_id.should.eql(createdTopicId);
+          done();
+        });
+    })
+  })
   
 });

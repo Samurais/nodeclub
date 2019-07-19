@@ -94,7 +94,7 @@ exports.index = function (req, res, next) {
         ep.emit('no_reply_topics', no_reply_topics);
       } else {
         Topic.getTopicsByQuery(
-          { reply_count: 0, tab: {$ne: 'job'}},
+          { reply_count: 0, tab: {$nin: ['job', 'dev']}},
           { limit: 5, sort: '-create_at'},
           ep.done('no_reply_topics', function (no_reply_topics) {
             cache.set('no_reply_topics', no_reply_topics, 60 * 1);
@@ -266,7 +266,7 @@ exports.delete = function (req, res, next) {
 
   var topic_id = req.params.tid;
 
-  Topic.getTopic(topic_id, function (err, topic) {
+  Topic.getFullTopic(topic_id, function (err, err_msg, topic, author, replies) {
     if (err) {
       return res.send({ success: false, message: err.message });
     }
@@ -278,6 +278,10 @@ exports.delete = function (req, res, next) {
       res.status(422);
       return res.send({ success: false, message: '此话题不存在或已被删除。' });
     }
+    author.score -= 5;
+    author.topic_count -= 1;
+    author.save();
+
     topic.deleted = true;
     topic.save(function (err) {
       if (err) {
@@ -418,7 +422,7 @@ exports.de_collect = function (req, res, next) {
       if (err) {
         return next(err);
       }
-      if (removeResult.result.n == 0) {
+      if (removeResult.n == 0) {
         return res.json({status: 'failed'})
       }
 

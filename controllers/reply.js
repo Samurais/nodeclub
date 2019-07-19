@@ -92,11 +92,9 @@ exports.delete = function (req, res, next) {
       reply.save();
       res.json({status: 'success'});
 
-      if (!reply.reply_id) {
-        reply.author.score -= 5;
-        reply.author.reply_count -= 1;
-        reply.author.save();
-      }
+      reply.author.score -= 5;
+      reply.author.reply_count -= 1;
+      reply.author.save();
     } else {
       res.json({status: 'failed'});
       return;
@@ -141,6 +139,7 @@ exports.update = function (req, res, next) {
 
       if (content.trim().length > 0) {
         reply.content = content;
+        reply.update_at = new Date();
         reply.save(function (err) {
           if (err) {
             return next(err);
